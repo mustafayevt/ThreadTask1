@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ThreadTask1.Commands;
 
@@ -12,7 +13,7 @@ namespace ThreadTask1
     public class ViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        string FilteredFilesPath = "FilesWithForbiddenWord";
+        public string FilteredFilesPath = "FilesWithForbiddenWord";
         public void OnNotifyPropertyChanged(string param)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(param));
@@ -25,7 +26,7 @@ namespace ThreadTask1
             AddForbiddenWordFromFileCommand = new AddForbiddenWordFromFileCommand(this);
             SearchTaskCommand = new SearchTaskCommand(this);
 
-
+            token = cancellationTokenSource.Token;
 
             ForbiddenWords = new ObservableCollection<string>() { "pox" };
             if (!System.IO.Directory.Exists(FilteredFilesPath))
@@ -37,10 +38,11 @@ namespace ThreadTask1
         public AddForbiddenWordFromFileCommand AddForbiddenWordFromFileCommand { get; set; }
         public SearchTaskCommand SearchTaskCommand { get; set; }
         public Task SearchFilesTask { get; set; }
-        public Task SearchForbiddenWordTask { get; set; }
+        public Task CopyFilesTask { get; set; }
         public Task ReplaceForbiddenWordTask { get; set; }
 
-
+        public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        public CancellationToken token;
         //
 
         public ObservableCollection<string> FoundForbiddenPaths { get; set; } = new ObservableCollection<string>();

@@ -32,31 +32,65 @@ namespace ThreadTask1.Commands
             {
                 if (!string.IsNullOrEmpty(Model.Path))
                 {
-                    Model.SearchFilesTask = new Task(SearchFilesWithForbiddenWords);
+                    TaskIsRunning = true;
+                    Model.SearchFilesTask = new Task(SearchFilesWithForbiddenWords, Model.token);
                     Model.SearchFilesTask.Start();
                 }
             }
-            else if(state == "2")
+            else if (state == "2")
             {
-                if(Model.SearchFilesTask != null)
+                if (Model.SearchFilesTask != null)
                 {
-                    
+                    TaskIsRunning = false;
+                }
+            }
+            else if (state == "3")
+            {
+                if (Model.SearchFilesTask != null)
+                {
+                    Model.cancellationTokenSource.Cancel();
                 }
             }
         }
+        public bool TaskIsRunning { get; set; } = true;
+        public int IterationForSearch { get; set; }
+        public int IterationForCopy { get; set; }
         public void SearchFilesWithForbiddenWords()
         {
-            foreach (string file in Directory.EnumerateFiles(Model.Path, "*.txt", SearchOption.AllDirectories))
+            List<string> files = Directory.GetFiles(Model.Path, "*.txt", SearchOption.AllDirectories).ToList();
+            for (int i = IterationForSearch; i < files.Count; i++)
             {
                 foreach (var item in Model.ForbiddenWords)
                 {
-                    if (File.ReadAllText(file).Contains(item))
+                    while (!TaskIsRunning) { }
+                    if (Model.token.IsCancellationRequested)
+                    {
+                        Thread.CurrentThread.Abort();
+                        return;
+                    }
+
+                    if (File.ReadAllText(files[i]).Contains(item))
                     {
                         Thread.Sleep(500);
-                        App.Current.Dispatcher.BeginInvoke(new Action(() => Model.FoundForbiddenPaths.Add(file)));
+                        App.Current.Dispatcher.BeginInvoke(new Action(() => Model.FoundForbiddenPaths.Add(files[i])));
                         break;
                     }
                 }
+                IterationForSearch = i;
+            }
+        }
+
+        public void CopyFilesWithForbiddenWords()
+        {
+            for (int i = IterationForCopy; i < Model.FoundForbiddenPaths.Count; i++)
+            {
+                while (!TaskIsRunning) { }
+                foreach (var item in Model.ForbiddenWords)
+                {
+                    string FileContent;
+                }
+                File.Copy(Model.FoundForbiddenPaths[i], Model.FilteredFilesPath);
+                IterationForCopy = i;
             }
         }
     }
