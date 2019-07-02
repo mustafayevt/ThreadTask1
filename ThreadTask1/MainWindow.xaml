@@ -8,32 +8,37 @@
         Title="MainWindow" Height="628.443" Width="759.937">
     <UniformGrid Rows="2">
         <UniformGrid Columns="2">
-            
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="4*"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
 
-            <ListBox ItemsSource="{Binding ForbiddenWords}" FontSize="15"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="4*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <UniformGrid Grid.Row="1" Columns="2" >
-                <UniformGrid Rows="2">
-                    <TextBox Text="{Binding NewForbiddenWord,UpdateSourceTrigger=PropertyChanged}" Background="AliceBlue"/>
-                    <Button Content="Add Word" Command="{Binding AddForbiddenWordCommand}"/>
+                <ListBox ItemsSource="{Binding ForbiddenWords}" FontSize="15"/>
+
+                <UniformGrid Grid.Row="1" Columns="2" >
+                    <UniformGrid Rows="2">
+                        <TextBox Text="{Binding NewForbiddenWord,UpdateSourceTrigger=PropertyChanged}" Background="AliceBlue"/>
+                        <Button Content="Add Word" Command="{Binding AddForbiddenWordCommand}"/>
+                    </UniformGrid>
+                    <Button Content="Add Forbidden Word From File" Command="{Binding AddForbiddenWordFromFileCommand}"/>
                 </UniformGrid>
-                <Button Content="Add Forbidden Word From File" Command="{Binding AddForbiddenWordFromFileCommand}"/>
-            </UniformGrid>
-        </Grid>
+            </Grid>
             <StackPanel>
                 <Button Content="Start" Command="{Binding SearchTaskCommand}" CommandParameter="1"/>
                 <Button Content="Pause" Command="{Binding SearchTaskCommand}" CommandParameter="2"/>
                 <Button Content="Cancel" Command="{Binding SearchTaskCommand}" CommandParameter="3"/>
-            <Button Command="{Binding FolderBrowseCommand}" Content="Select Search Directory"/>
+                <Button Command="{Binding FolderBrowseCommand}" Content="Select Search Directory"/>
             </StackPanel>
         </UniformGrid>
-        <UniformGrid Columns="4">
-            <ListBox ItemsSource="{Binding FoundForbiddenPaths}"/>
-        </UniformGrid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="7*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <ListBox ItemsSource="{Binding FoundForbiddenPaths}" />
+            <ProgressBar Grid.Row="1" IsIndeterminate="{Binding TaskIsRunning}"/>
+        </Grid>
     </UniformGrid>
 </Window>

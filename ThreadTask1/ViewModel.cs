@@ -17,7 +17,7 @@ namespace ThreadTask1
         public void OnNotifyPropertyChanged(string param)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(param));
-            
+
         }
         public ViewModel()
         {
@@ -28,7 +28,7 @@ namespace ThreadTask1
 
             token = cancellationTokenSource.Token;
 
-            ForbiddenWords = new ObservableCollection<string>() { "pox" };
+            ForbiddenWords = new ObservableCollection<string>();
             if (!System.IO.Directory.Exists(FilteredFilesPath))
                 System.IO.Directory.CreateDirectory(FilteredFilesPath);
         }
@@ -42,7 +42,10 @@ namespace ThreadTask1
 
         public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         public CancellationToken token;
+        private bool taskIsRunning;
+
         //
+        public bool TaskIsRunning { get => taskIsRunning; set { taskIsRunning = value; OnNotifyPropertyChanged(nameof(TaskIsRunning)); } }
 
         public ObservableCollection<string> FoundForbiddenPaths { get; set; } = new ObservableCollection<string>();
 

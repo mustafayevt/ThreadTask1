@@ -32,18 +32,25 @@ namespace ThreadTask1.Commands
             {
                 if (!string.IsNullOrEmpty(Model.Path))
                 {
-                    TaskIsRunning = true;
-                    Model.SearchFilesTask = new Task(SearchFilesWithForbiddenWords, Model.token);
-                    Model.SearchFilesTask.Start();
-                    Model.CopyFilesTask = new Task(CopyFilesWithForbiddenWords, Model.token);
-                    Model.CopyFilesTask.Start();
+                    try
+                    {
+                        Model.TaskIsRunning = true;
+                        Model.SearchFilesTask = new Task(SearchFilesWithForbiddenWords, Model.token);
+                        Model.SearchFilesTask.Start();
+                        Model.CopyFilesTask = new Task(CopyFilesWithForbiddenWords, Model.token);
+                        Model.CopyFilesTask.Start();
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Thread was cancelled!");
+                    }
                 }
             }
             else if (state == "2")
             {
                 if (Model.SearchFilesTask != null)
                 {
-                    TaskIsRunning = false;
+                    Model.TaskIsRunning = false;
                 }
             }
             else if (state == "3")
@@ -54,7 +61,6 @@ namespace ThreadTask1.Commands
                 }
             }
         }
-        public bool TaskIsRunning { get; set; } = true;
         public int IterationForSearch { get; set; }
         public int IterationForCopy { get; set; }
         public void SearchFilesWithForbiddenWords()
@@ -64,7 +70,7 @@ namespace ThreadTask1.Commands
             {
                 foreach (var item in Model.ForbiddenWords)
                 {
-                    while (!TaskIsRunning) { }
+                    while (!Model.TaskIsRunning) { }
                     if (Model.token.IsCancellationRequested)
                     {
                         Thread.CurrentThread.Abort();
@@ -73,8 +79,9 @@ namespace ThreadTask1.Commands
 
                     if (File.ReadAllText(files[i]).Contains(item))
                     {
-                        Thread.Sleep(50);
-                        App.Current.Dispatcher.BeginInvoke(new Action(() => Model.FoundForbiddenPaths.Add(files[i])));
+                        Thread.Sleep(500);
+                        if (i < files.Count - 1)
+                            App.Current.Dispatcher.BeginInvoke(new Action(() => Model.FoundForbiddenPaths.Add(files[i])));
                         break;
                     }
                 }
@@ -84,26 +91,37 @@ namespace ThreadTask1.Commands
 
         public void CopyFilesWithForbiddenWords()
         {
-            Thread.Sleep(200);
+            Thread.Sleep(2000);
+            List<string> Report = new List<string>();
             for (int i = IterationForCopy; i < Model.FoundForbiddenPaths.Count; i++)
             {
                 string fileName = Path.GetFileName(Model.FoundForbiddenPaths[i]);
                 string FileContent = File.ReadAllText(Model.FoundForbiddenPaths[i]);
                 foreach (var item in Model.ForbiddenWords)
                 {
-                    while (!TaskIsRunning) { }
+                    while (!Model.TaskIsRunning) { }
                     if (Model.token.IsCancellationRequested)
                     {
                         Thread.CurrentThread.Abort();
                         return;
                     }
+                    if (FileContent.Contains(item)) Report.Add(item);
                     FileContent = FileContent.Replace(item, "*******");
                     Thread.Sleep(700);
                 }
                 File.WriteAllText($"{Model.FilteredFilesPath}/{fileName}", FileContent);
                 IterationForCopy = i;
             }
-
+            var s = Report.GroupBy(x => x);
+            StringBuilder ReportFile = new StringBuilder();
+            foreach (var item in s)
+            {
+                ReportFile.AppendLine(DateTime.Now.ToString());
+                ReportFile.AppendLine($"Word: { item.Key} - Count: { item.Count()}\n");
+            }
+            File.WriteAllText("Report.txt", ReportFile.ToString());
+            Model.TaskIsRunning = false;
+            MessageBox.Show("Finished");
         }
-    } 
+    }
 }
