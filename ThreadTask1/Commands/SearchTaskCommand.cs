@@ -35,6 +35,8 @@ namespace ThreadTask1.Commands
                     TaskIsRunning = true;
                     Model.SearchFilesTask = new Task(SearchFilesWithForbiddenWords, Model.token);
                     Model.SearchFilesTask.Start();
+                    Model.CopyFilesTask = new Task(CopyFilesWithForbiddenWords, Model.token);
+                    Model.CopyFilesTask.Start();
                 }
             }
             else if (state == "2")
@@ -71,7 +73,7 @@ namespace ThreadTask1.Commands
 
                     if (File.ReadAllText(files[i]).Contains(item))
                     {
-                        Thread.Sleep(500);
+                        Thread.Sleep(50);
                         App.Current.Dispatcher.BeginInvoke(new Action(() => Model.FoundForbiddenPaths.Add(files[i])));
                         break;
                     }
@@ -82,16 +84,26 @@ namespace ThreadTask1.Commands
 
         public void CopyFilesWithForbiddenWords()
         {
+            Thread.Sleep(200);
             for (int i = IterationForCopy; i < Model.FoundForbiddenPaths.Count; i++)
             {
-                while (!TaskIsRunning) { }
+                string fileName = Path.GetFileName(Model.FoundForbiddenPaths[i]);
+                string FileContent = File.ReadAllText(Model.FoundForbiddenPaths[i]);
                 foreach (var item in Model.ForbiddenWords)
                 {
-                    string FileContent;
+                    while (!TaskIsRunning) { }
+                    if (Model.token.IsCancellationRequested)
+                    {
+                        Thread.CurrentThread.Abort();
+                        return;
+                    }
+                    FileContent = FileContent.Replace(item, "*******");
+                    Thread.Sleep(700);
                 }
-                File.Copy(Model.FoundForbiddenPaths[i], Model.FilteredFilesPath);
+                File.WriteAllText($"{Model.FilteredFilesPath}/{fileName}", FileContent);
                 IterationForCopy = i;
             }
+
         }
-    }
+    } 
 }

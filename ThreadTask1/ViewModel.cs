@@ -39,7 +39,6 @@ namespace ThreadTask1
         public SearchTaskCommand SearchTaskCommand { get; set; }
         public Task SearchFilesTask { get; set; }
         public Task CopyFilesTask { get; set; }
-        public Task ReplaceForbiddenWordTask { get; set; }
 
         public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         public CancellationToken token;
